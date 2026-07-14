@@ -1,4 +1,4 @@
-//社团活动报名管理系统 - 数据库初始化脚本
+-- 社团活动报名管理系统 - 数据库初始化脚本
 
 CREATE DATABASE IF NOT EXISTS club_registration
     DEFAULT CHARACTER SET utf8mb4
@@ -6,14 +6,14 @@ CREATE DATABASE IF NOT EXISTS club_registration
 
 USE club_registration;
 
-//1. 用户表
+-- 1. 用户表
 
 CREATE TABLE IF NOT EXISTS `user` (
     `id`            BIGINT          NOT NULL AUTO_INCREMENT  COMMENT '用户ID',
     `username`      VARCHAR(50)     NOT NULL                 COMMENT '用户名',
     `password`      VARCHAR(255)    NOT NULL                 COMMENT '密码（BCrypt加密）',
     `email`         VARCHAR(100)    NOT NULL                 COMMENT '邮箱',
-    `role`          VARCHAR(20)     NOT NULL DEFAULT 'USER'  COMMENT '角色: USER / ADMIN',
+    `role`          VARCHAR(20)     NOT NULL DEFAULT 'ROLE_USER'  COMMENT '角色: ROLE_USER / ROLE_ADMIN',
     `created_at`    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at`    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `is_deleted`    TINYINT         NOT NULL DEFAULT 0       COMMENT '软删除: 0未删除, 1已删除',
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `user` (
     KEY `idx_is_deleted` (`is_deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
-//2. 分类表
+-- 2. 分类表
 
 CREATE TABLE IF NOT EXISTS `category` (
     `id`            BIGINT          NOT NULL AUTO_INCREMENT  COMMENT '分类ID',
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `category` (
     KEY `idx_is_deleted` (`is_deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='活动分类表';
 
-//3. 活动表
+-- 3. 活动表
 
 CREATE TABLE IF NOT EXISTS `activity` (
     `id`                    BIGINT          NOT NULL AUTO_INCREMENT  COMMENT '活动ID',
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `activity` (
     KEY `idx_created_by` (`created_by`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='活动表';
 
-//4. 报名记录表
+-- 4. 报名记录表
 
 CREATE TABLE IF NOT EXISTS `registration` (
     `id`            BIGINT          NOT NULL AUTO_INCREMENT  COMMENT '报名记录ID',
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `registration` (
     UNIQUE KEY `uk_user_activity` (`user_id`, `activity_id`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报名记录表';
 
-//5. 操作日志表
+-- 5. 操作日志表
 
 CREATE TABLE IF NOT EXISTS `operation_log` (
     `id`            BIGINT          NOT NULL AUTO_INCREMENT  COMMENT '日志ID',
@@ -97,12 +97,12 @@ CREATE TABLE IF NOT EXISTS `operation_log` (
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';
 
-//初始化数据：管理员账号 (密码: admin123, BCrypt加密)
+-- 初始化数据：管理员账号 (密码: admin123, BCrypt加密)
 
 INSERT INTO `user` (`username`, `password`, `email`, `role`) VALUES
 ('admin', '$2a$10$z5xaQhI/8W7EJpaePOKj7ukZUREc.oN7iyCjgThAwArccJtBNiWyi', 'admin@club.com', 'ROLE_ADMIN');
 
-//初始化数据：示例分类
+-- 初始化数据：示例分类
 
 INSERT INTO `category` (`name`, `description`, `sort_order`) VALUES
 ('学术讲座', '学术类讲座与分享活动', 1),
