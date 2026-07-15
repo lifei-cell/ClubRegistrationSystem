@@ -12,7 +12,7 @@
     </parent>
 
     <groupId>com.twt</groupId>
-    <artifactId>ClubRrgistrationSystem</artifactId>
+    <artifactId>ClubRegistrationSystem</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
