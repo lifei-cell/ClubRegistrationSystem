@@ -13,8 +13,10 @@ import com.twt.club.registration.service.UserService;
 import com.twt.club.registration.vo.LoginVO;
 import com.twt.club.registration.vo.UserVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,26 +26,30 @@ public class UserServiceImpl implements UserService {
     private final JwtUtils jwtUtils;
 
     @Override
+    @Transactional
     public UserVO register(RegisterRequest registerRequest) {
-        // 检查用户名重复
-        if (userMapper.selectCount(new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, registerRequest.getUsername())) > 0) {
-            throw new BusinessException(ErrorCode.USERNAME_EXISTS);
-        }
-
-        // 检查邮箱重复
-        if (userMapper.selectCount(new LambdaQueryWrapper<User>()
-                .eq(User::getEmail, registerRequest.getEmail())) > 0) {
-            throw new BusinessException(ErrorCode.EMAIL_EXISTS);
-        }
-
-        // 构建用户实体并保存
+        // 构建用户实体
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setEmail(registerRequest.getEmail());
         user.setRole(Constants.ROLE_USER);
-        userMapper.insert(user);
+
+        // 先插入，利用数据库 uk_username/uk_email 唯一约束防止并发重复注册
+        try {
+            userMapper.insert(user);
+        } catch (DuplicateKeyException e) {
+            // 根据异常消息判断是用户名还是邮箱冲突
+            String msg = e.getMessage();
+            if (msg != null && msg.contains("uk_username")) {
+                throw new BusinessException(ErrorCode.USERNAME_EXISTS);
+            }
+            if (msg != null && msg.contains("uk_email")) {
+                throw new BusinessException(ErrorCode.EMAIL_EXISTS);
+            }
+            // 无法判断时优先报用户名冲突
+            throw new BusinessException(ErrorCode.USERNAME_EXISTS);
+        }
 
         return toUserVO(user);
     }

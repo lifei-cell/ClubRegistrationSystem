@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.twt.club.registration.common.ErrorCode;
 import com.twt.club.registration.common.PageResult;
-import com.twt.club.registration.common.Result;
 import com.twt.club.registration.dto.ActivityQueryRequest;
 import com.twt.club.registration.entity.Activity;
 import com.twt.club.registration.entity.Category;

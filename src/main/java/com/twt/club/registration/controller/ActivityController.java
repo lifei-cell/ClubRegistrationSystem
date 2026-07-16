@@ -6,6 +6,7 @@ import com.twt.club.registration.dto.ActivityQueryRequest;
 import com.twt.club.registration.service.ActivityService;
 import com.twt.club.registration.vo.ActivityDetailVO;
 import com.twt.club.registration.vo.ActivityVO;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +20,7 @@ public class ActivityController {
     private final ActivityService activityService;
 
     @GetMapping
-    public Result<PageResult<ActivityVO>> list(ActivityQueryRequest request) {
+    public Result<PageResult<ActivityVO>> list(@Valid ActivityQueryRequest request) {
         PageResult<ActivityVO> result = activityService.list(request);
         return Result.success(result);
     }
