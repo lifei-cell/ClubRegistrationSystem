@@ -106,18 +106,33 @@ public class RegistrationServiceImpl implements RegistrationService {
         Page<Registration> p = new Page<>(page, size);
         p = registrationMapper.selectPage(p, wrapper);
 
-        // 查询当前用户信息（所有记录属于同一用户，只需查一次）
-        User user = userMapper.selectById(userId);
-
-        List<RegistrationVO> records = enrichWithActivityInfo(p.getRecords(), user);
+        List<RegistrationVO> records = enrichWithActivityInfo(p.getRecords());
 
         return PageResult.of(p.getTotal(), p.getCurrent(), p.getSize(), records);
     }
 
-    private List<RegistrationVO> enrichWithActivityInfo(List<Registration> registrations, User user) {
+    @Override
+    public List<RegistrationVO> getByActivityId(Long activityId) {
+        List<Registration> registrations = registrationMapper.selectList(
+                new LambdaQueryWrapper<Registration>()
+                        .eq(Registration::getActivityId, activityId)
+                        .eq(Registration::getStatus, "REGISTERED")
+                        .orderByAsc(Registration::getRegisteredAt));
+        return enrichWithActivityInfo(registrations);
+    }
+
+    private List<RegistrationVO> enrichWithActivityInfo(List<Registration> registrations) {
         if (registrations.isEmpty()) {
             return List.of();
         }
+
+        // 批量获取用户信息
+        List<Long> userIds = registrations.stream()
+                .map(Registration::getUserId)
+                .distinct()
+                .toList();
+        Map<Long, User> userMap = userMapper.selectBatchIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
 
         // 批量获取活动信息
         List<Long> activityIds = registrations.stream()
@@ -136,6 +151,7 @@ public class RegistrationServiceImpl implements RegistrationService {
             vo.setRegisteredAt(r.getRegisteredAt());
             vo.setCancelledAt(r.getCancelledAt());
 
+            User user = userMap.get(r.getUserId());
             if (user != null) {
                 vo.setUsername(user.getUsername());
                 vo.setEmail(user.getEmail());
