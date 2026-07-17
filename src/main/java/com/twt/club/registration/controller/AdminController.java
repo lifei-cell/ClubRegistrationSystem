@@ -40,7 +40,7 @@ public class AdminController {
 
     @PutMapping("/activities/{id}")
     public Result<ActivityDetailVO> updateActivity(@PathVariable Long id,
-                                                   @RequestBody ActivityUpdateRequest request) {
+                                                   @Valid @RequestBody ActivityUpdateRequest request) {
         ActivityDetailVO activity = activityService.update(id, request);
         operationLogService.log(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentUsername(),
                 "UPDATE_ACTIVITY", "activity", id, "修改活动: " + activity.getTitle());

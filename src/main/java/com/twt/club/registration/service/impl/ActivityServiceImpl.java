@@ -34,7 +34,6 @@ public class ActivityServiceImpl implements ActivityService {
     private final CategoryMapper categoryMapper;
     private final RegistrationMapper registrationMapper;
 
-
     @Override
     public PageResult<ActivityVO> list(ActivityQueryRequest request) {
         LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
@@ -103,7 +102,6 @@ public class ActivityServiceImpl implements ActivityService {
 
         return toDetailVO(activity, categoryName);
     }
-
 
     @Override
     @Transactional

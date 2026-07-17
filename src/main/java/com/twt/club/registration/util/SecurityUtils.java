@@ -9,28 +9,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class SecurityUtils {
     private SecurityUtils() {}
 
-    public static Long getCurrentUserId() {
+    private static JwtUserDetails getCurrentUserDetails() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof JwtUserDetails userDetails) {
-            return userDetails.getUserId();
+            return userDetails;
         }
         throw new BusinessException(ErrorCode.UNAUTHORIZED);
+    }
+
+    public static Long getCurrentUserId() {
+        return getCurrentUserDetails().getUserId();
     }
 
     public static String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof JwtUserDetails userDetails) {
-            return userDetails.getUsername();
-        }
-        throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        return getCurrentUserDetails().getUsername();
     }
 
-    public static boolean isAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            return authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        }
-        return false;
-    }
 }

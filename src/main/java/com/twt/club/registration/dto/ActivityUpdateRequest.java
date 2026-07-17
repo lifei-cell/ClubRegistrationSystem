@@ -1,5 +1,6 @@
 package com.twt.club.registration.dto;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -15,6 +16,7 @@ public class ActivityUpdateRequest {
     @Size(max = 200, message = "地点长度不能超过200位")
     private String location;
 
+    @Future(message = "活动开始时间必须在将来")
     private LocalDateTime startTime;
 
     private LocalDateTime endTime;

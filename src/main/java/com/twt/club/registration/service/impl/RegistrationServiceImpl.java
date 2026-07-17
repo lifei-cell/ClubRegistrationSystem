@@ -15,6 +15,7 @@ import com.twt.club.registration.mapper.UserMapper;
 import com.twt.club.registration.service.RegistrationService;
 import com.twt.club.registration.vo.RegistrationVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +27,13 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RegistrationServiceImpl implements RegistrationService {
 
     private final RegistrationMapper registrationMapper;
     private final ActivityMapper activityMapper;
     private final UserMapper userMapper;
+
     @Override
     @Transactional
     public void register(Long userId, Long activityId) {
@@ -94,7 +97,10 @@ public class RegistrationServiceImpl implements RegistrationService {
         }
 
         // 减少报名人数
-        activityMapper.updateCurrentParticipants(activityId, -1);
+        int participantUpdated = activityMapper.updateCurrentParticipants(activityId, -1);
+        if (participantUpdated == 0) {
+            log.warn("取消报名时扣减名额失败: activityId={}, userId={}", activityId, userId);
+        }
     }
 
     @Override
