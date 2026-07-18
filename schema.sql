@@ -61,7 +61,8 @@ CREATE TABLE IF NOT EXISTS `activity` (
     KEY `idx_status` (`status`),
     KEY `idx_start_time` (`start_time`),
     KEY `idx_is_deleted` (`is_deleted`),
-    KEY `idx_created_by` (`created_by`)
+    KEY `idx_created_by` (`created_by`),
+    UNIQUE KEY `uk_title` (`title`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='活动表';
 
 -- 4. 报名记录表
@@ -75,10 +76,11 @@ CREATE TABLE IF NOT EXISTS `registration` (
     `cancelled_at`  DATETIME        DEFAULT NULL             COMMENT '取消时间',
     `created_at`    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at`    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_deleted`    TINYINT         NOT NULL DEFAULT 0       COMMENT '软删除: 0未删除, 1已删除',
     PRIMARY KEY (`id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_activity_id` (`activity_id`),
-    UNIQUE KEY `uk_user_activity` (`user_id`, `activity_id`, `status`)
+    KEY `idx_is_deleted` (`is_deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='报名记录表';
 
 -- 5. 操作日志表

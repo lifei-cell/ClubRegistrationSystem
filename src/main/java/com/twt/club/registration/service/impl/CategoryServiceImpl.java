@@ -33,13 +33,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryVO create(CategoryRequest request) {
-        // 检查分类名称唯一性
-        Long count = categoryMapper.selectCount(new LambdaQueryWrapper<Category>()
-                .eq(Category::getName, request.getName()));
-        if (count > 0) {
-            throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
-        }
-
         Category category = new Category();
         category.setName(request.getName());
         category.setDescription(request.getDescription());
@@ -61,26 +54,19 @@ public class CategoryServiceImpl implements CategoryService {
             throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
         }
 
-        // 检查名称唯一性（排除自身）
-        Long count = categoryMapper.selectCount(new LambdaQueryWrapper<Category>()
-                .eq(Category::getName, request.getName())
-                .ne(Category::getId, id));
-        if (count > 0) {
-            throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
+        if (request.getName() != null) {
+            category.setName(request.getName());
         }
 
-        category.setName(request.getName());
         if (request.getDescription() != null) {
             category.setDescription(request.getDescription());
         }
+
         if (request.getSortOrder() != null) {
             category.setSortOrder(request.getSortOrder());
         }
-        try {
-            categoryMapper.updateById(category);
-        } catch (DuplicateKeyException e) {
-            throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
-        }
+
+        categoryMapper.updateById(category);
 
         return toVO(category);
     }

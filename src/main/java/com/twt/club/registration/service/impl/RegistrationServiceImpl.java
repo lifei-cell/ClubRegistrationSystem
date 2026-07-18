@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.twt.club.registration.common.ErrorCode;
 import com.twt.club.registration.common.PageResult;
 import com.twt.club.registration.entity.Activity;
+import com.twt.club.registration.entity.Category;
 import com.twt.club.registration.entity.Registration;
 import com.twt.club.registration.entity.User;
 import com.twt.club.registration.exception.BusinessException;
@@ -49,26 +50,29 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         // 检查活动是否已开始
         if (LocalDateTime.now().isAfter(activity.getStartTime())) {
-            throw new BusinessException(ErrorCode.ACTIVITY_STARTED, "活动已开始，无法报名");
+            throw new BusinessException(ErrorCode.ACTIVITY_STARTED);
         }
 
-        // 先创建报名记录（利用数据库 uk_user_activity 唯一约束防止并发重复报名）
+        // 检查重复报名
+        Long count = registrationMapper.selectCount(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getUserId, userId)
+                .eq(Registration::getActivityId, activityId));
+        if (count > 0) {
+            throw new BusinessException(ErrorCode.ALREADY_REGISTERED);
+        }
+
+        // 给当前报名人数加 1
+        int updated = activityMapper.updateCurrentParticipants(activityId, 1);
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.ACTIVITY_FULL);
+        }
+
         Registration registration = new Registration();
         registration.setUserId(userId);
         registration.setActivityId(activityId);
         registration.setStatus("REGISTERED");
         registration.setRegisteredAt(LocalDateTime.now());
-        try {
-            registrationMapper.insert(registration);
-        } catch (DuplicateKeyException e) {
-            throw new BusinessException(ErrorCode.ALREADY_REGISTERED);
-        }
-
-        // 再扣减名额（乐观锁）
-        int updated = activityMapper.updateCurrentParticipants(activityId, 1);
-        if (updated == 0) {
-            throw new BusinessException(ErrorCode.ACTIVITY_FULL);
-        }
+        registrationMapper.insert(registration);
     }
 
     @Override
@@ -84,19 +88,20 @@ public class RegistrationServiceImpl implements RegistrationService {
             throw new BusinessException(ErrorCode.CANNOT_CANCEL_STARTED);
         }
 
-        // 原子更新：将状态从 REGISTERED 改为 CANCELLED，防止并发重复扣减名额
+        // 原子更新
         LambdaUpdateWrapper<Registration> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(Registration::getUserId, userId)
                 .eq(Registration::getActivityId, activityId)
                 .eq(Registration::getStatus, "REGISTERED")
                 .set(Registration::getStatus, "CANCELLED")
+                .set(Registration::getIsDeleted, 1)
                 .set(Registration::getCancelledAt, LocalDateTime.now());
         int updated = registrationMapper.update(updateWrapper);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.REGISTRATION_NOT_FOUND);
         }
 
-        // 减少报名人数
+        // 将报名人数减 1
         int participantUpdated = activityMapper.updateCurrentParticipants(activityId, -1);
         if (participantUpdated == 0) {
             log.warn("取消报名时扣减名额失败: activityId={}, userId={}", activityId, userId);

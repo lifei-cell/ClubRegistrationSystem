@@ -27,6 +27,7 @@ public enum ErrorCode {
     ACTIVITY_STARTED(2005, "活动已开始，无法报名"),
     INVALID_ACTIVITY_TIME(2006, "活动时间不合法"),
     ACTIVITY_HAS_REGISTRATIONS(2007, "活动已有报名记录，无法删除"),
+    ACTIVITY_NAME_EXISTS(2008, "活动名称已存在"),
 
     // 报名相关 3xxx
     ALREADY_REGISTERED(3001, "已报名该活动"),

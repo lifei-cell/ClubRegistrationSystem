@@ -13,9 +13,9 @@ public class ActivityQueryRequest {
     private String status;
 
     @Min(value = 1, message = "页码不能小于1")
-    private Integer page = 1;
+    private Integer page;
 
     @Min(value = 1, message = "每页条数不能小于1")
     @Max(value = 100, message = "每页条数不能超过100")
-    private Integer size = 10;
+    private Integer size;
 }

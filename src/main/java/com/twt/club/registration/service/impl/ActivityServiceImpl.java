@@ -18,6 +18,7 @@ import com.twt.club.registration.service.ActivityService;
 import com.twt.club.registration.vo.ActivityDetailVO;
 import com.twt.club.registration.vo.ActivityVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -127,7 +128,12 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setCategoryId(request.getCategoryId());
         activity.setStatus("UPCOMING");
         activity.setCreatedBy(userId);
-        activityMapper.insert(activity);
+
+        try {
+            activityMapper.insert(activity);
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException(ErrorCode.ACTIVITY_NAME_EXISTS);
+        }
 
         return getById(activity.getId());
     }

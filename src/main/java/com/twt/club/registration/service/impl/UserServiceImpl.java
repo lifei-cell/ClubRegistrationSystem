@@ -28,14 +28,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserVO register(RegisterRequest registerRequest) {
-        // 构建用户实体
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setEmail(registerRequest.getEmail());
         user.setRole(Constants.ROLE_USER);
 
-        // 先插入，利用数据库 uk_username/uk_email 唯一约束防止并发重复注册
         try {
             userMapper.insert(user);
         } catch (DuplicateKeyException e) {
@@ -47,8 +45,6 @@ public class UserServiceImpl implements UserService {
             if (msg != null && msg.contains("uk_email")) {
                 throw new BusinessException(ErrorCode.EMAIL_EXISTS);
             }
-            // 无法判断时优先报用户名冲突
-            throw new BusinessException(ErrorCode.USERNAME_EXISTS);
         }
 
         return toUserVO(user);
