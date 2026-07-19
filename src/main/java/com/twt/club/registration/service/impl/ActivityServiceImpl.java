@@ -6,7 +6,6 @@ import com.twt.club.registration.common.Constants;
 import com.twt.club.registration.common.ErrorCode;
 import com.twt.club.registration.common.PageResult;
 import com.twt.club.registration.dto.ActivityCreateRequest;
-import com.twt.club.registration.dto.ActivityQueryRequest;
 import com.twt.club.registration.dto.ActivityUpdateRequest;
 import com.twt.club.registration.entity.Activity;
 import com.twt.club.registration.entity.Category;
@@ -37,32 +36,30 @@ public class ActivityServiceImpl implements ActivityService {
     private final RegistrationMapper registrationMapper;
 
     @Override
-    public PageResult<ActivityVO> list(ActivityQueryRequest request) {
+    public PageResult<ActivityVO> list(String keyword, Long categoryId, String status, int pageNum, int pageSize) {
         LambdaQueryWrapper<Activity> wrapper = new LambdaQueryWrapper<>();
 
         // 关键词搜索
-        if (StringUtils.hasText(request.getKeyword())) {
+        if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w
-                    .like(Activity::getTitle, request.getKeyword())
+                    .like(Activity::getTitle, keyword)
                     .or()
-                    .like(Activity::getLocation, request.getKeyword()));
+                    .like(Activity::getLocation, keyword));
         }
 
         // 分类筛选
-        if (request.getCategoryId() != null) {
-            wrapper.eq(Activity::getCategoryId, request.getCategoryId());
+        if (categoryId != null) {
+            wrapper.eq(Activity::getCategoryId, categoryId);
         }
 
         // 状态筛选
-        if (StringUtils.hasText(request.getStatus())) {
-            wrapper.eq(Activity::getStatus, request.getStatus());
+        if (StringUtils.hasText(status)) {
+            wrapper.eq(Activity::getStatus, status);
         }
 
         // 按开始时间倒序
         wrapper.orderByDesc(Activity::getStartTime);
 
-        int pageNum = request.getPage();
-        int pageSize = request.getSize();
         Page<Activity> page = new Page<>(pageNum, pageSize);
         page = activityMapper.selectPage(page, wrapper);
 
@@ -208,7 +205,7 @@ public class ActivityServiceImpl implements ActivityService {
             throw new BusinessException(ErrorCode.ACTIVITY_HAS_REGISTRATIONS);
         }
 
-        // 将 title 追加后缀以释放唯一约束
+        // 释放唯一约束
         String suffix = "_deleted_" + id;
         String newTitle = activity.getTitle() + suffix;
         // 如果超出数据库限制，则截断原标题

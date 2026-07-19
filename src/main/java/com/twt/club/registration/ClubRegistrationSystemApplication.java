@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication
 @EnableAsync
 public class ClubRegistrationSystemApplication {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(ClubRegistrationSystemApplication.class, args);
     }
 }

@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 @Component
 public class MyMetaObjectHandler implements MetaObjectHandler {
-
     @Override
     public void insertFill(MetaObject metaObject) {
         LocalDateTime now = LocalDateTime.now();

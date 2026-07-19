@@ -1,6 +1,7 @@
 package com.twt.club.registration.dto;
 
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -19,11 +20,14 @@ public class ActivityUpdateRequest {
     @Future(message = "活动开始时间必须在将来")
     private LocalDateTime startTime;
 
+    @Future(message = "活动截止时间必须在将来")
     private LocalDateTime endTime;
 
+    @Future(message = "报名截止时间必须在将来")
     private LocalDateTime registrationDeadline;
 
     @Min(value = 1, message = "最大报名人数必须大于0")
+    @Max(value = 100000, message = "最大报名人数必须小于等于100000")
     private Integer maxParticipants;
 
     private Long categoryId;

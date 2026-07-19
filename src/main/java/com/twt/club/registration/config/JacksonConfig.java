@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 
 @Configuration
 public class JacksonConfig {
-
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Bean

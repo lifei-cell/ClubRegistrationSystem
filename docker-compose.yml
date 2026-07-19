@@ -1,5 +1,5 @@
 services:
-  # ==================== MySQL 数据库 ====================
+  # MySQL 数据库
   mysql:
     image: mysql:8.4
     container_name: club-mysql
@@ -26,7 +26,7 @@ services:
       retries: 10
       start_period: 30s
 
-  # ==================== Spring Boot 后端 ====================
+  # Spring Boot 后端
   backend:
     build:
       context: .

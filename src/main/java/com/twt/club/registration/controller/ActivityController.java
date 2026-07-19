@@ -2,7 +2,6 @@ package com.twt.club.registration.controller;
 
 import com.twt.club.registration.common.PageResult;
 import com.twt.club.registration.common.Result;
-import com.twt.club.registration.dto.ActivityQueryRequest;
 import com.twt.club.registration.service.ActivityService;
 import com.twt.club.registration.vo.ActivityDetailVO;
 import com.twt.club.registration.vo.ActivityVO;
@@ -26,13 +25,7 @@ public class ActivityController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码不能小于1") Integer page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "每页条数不能小于1") @Max(value = 100, message = "每页条数不能超过100") Integer size) {
-        ActivityQueryRequest request = new ActivityQueryRequest();
-        request.setKeyword(keyword);
-        request.setCategoryId(categoryId);
-        request.setStatus(status);
-        request.setPage(page);
-        request.setSize(size);
-        PageResult<ActivityVO> result = activityService.list(request);
+        PageResult<ActivityVO> result = activityService.list(keyword, categoryId, status, page, size);
         return Result.success(result);
     }
 

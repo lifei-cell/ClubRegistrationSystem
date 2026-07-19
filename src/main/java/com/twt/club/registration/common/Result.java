@@ -8,14 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Result<T> {
-
     private int code;
     private String message;
     private T data;
-
-    public static Result<Void> success() {
-        return new Result<>(200, "success", null);
-    }
 
     public static Result<Void> success(String message) {
         return new Result<>(200, message, null);
@@ -35,9 +30,5 @@ public class Result<T> {
 
     public static Result<Void> error(ErrorCode errorCode) {
         return new Result<>(errorCode.getCode(), errorCode.getMessage(), null);
-    }
-
-    public static Result<Void> error(ErrorCode errorCode, String message) {
-        return new Result<>(errorCode.getCode(), message, null);
     }
 }

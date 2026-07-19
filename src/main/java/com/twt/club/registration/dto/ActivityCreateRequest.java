@@ -22,13 +22,16 @@ public class ActivityCreateRequest {
     private LocalDateTime startTime;
 
     @NotNull(message = "活动结束时间不能为空")
+    @Future(message = "活动截止时间必须在将来")
     private LocalDateTime endTime;
 
     @NotNull(message = "报名截止时间不能为空")
+    @Future(message = "报名截止时间必须在将来")
     private LocalDateTime registrationDeadline;
 
     @NotNull(message = "最大报名人数不能为空")
     @Min(value = 1, message = "最大报名人数必须大于0")
+    @Max(value = 100000, message = "最大报名人数必须小于等于100000")
     private Integer maxParticipants;
 
     private Long categoryId;

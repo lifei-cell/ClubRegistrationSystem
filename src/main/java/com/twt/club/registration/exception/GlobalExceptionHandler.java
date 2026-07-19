@@ -7,13 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import java.util.stream.Collectors;
 
@@ -31,9 +32,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleValidationException(MethodArgumentNotValidException e) {
-        FieldError fieldError = e.getBindingResult().getFieldError();
-        String message = fieldError != null ? fieldError.getDefaultMessage() : "参数校验失败";
-        log.warn("参数校验失败: {}", message);
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .map(fe -> fe.getField() + " " + fe.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        if (message.isEmpty()) {
+            message = "请求体校验失败";
+        }
+        log.warn("请求体校验失败: {}", message);
         return Result.error(ErrorCode.VALIDATION_ERROR.getCode(), message);
     }
 
@@ -43,7 +48,7 @@ public class GlobalExceptionHandler {
         String message = e.getConstraintViolations().stream()
                 .map(v -> v.getPropertyPath() + " " + v.getMessage())
                 .collect(Collectors.joining("; "));
-        log.warn("参数校验失败: {}", message);
+        log.warn("请求参数校验失败: {}", message);
         return Result.error(ErrorCode.VALIDATION_ERROR.getCode(), message);
     }
 
@@ -73,6 +78,20 @@ public class GlobalExceptionHandler {
     public Result<Void> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("权限不足: {}", e.getMessage());
         return Result.error(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage());
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleMissingParam(MissingServletRequestParameterException e) {
+        log.warn("缺少必填参数: {}", e.getParameterName());
+        return Result.error(ErrorCode.BAD_REQUEST.getCode(), "缺少必填参数: " + e.getParameterName());
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public Result<Void> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        log.warn("请求方法不支持: {}", e.getMessage());
+        return Result.error(ErrorCode.BAD_REQUEST.getCode(), "请求方法不支持: " + e.getMethod());
     }
 
     @ExceptionHandler(Exception.class)

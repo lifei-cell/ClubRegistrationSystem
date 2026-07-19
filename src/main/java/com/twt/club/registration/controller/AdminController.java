@@ -56,6 +56,8 @@ public class AdminController {
         return Result.success("删除成功");
     }
 
+    // 根据活动 id 获取报名记录
+
     @GetMapping("/activities/{id}/registrations")
     public Result<List<RegistrationVO>> activityRegistrations(@PathVariable Long id) {
         List<RegistrationVO> registrations = registrationService.getByActivityId(id);

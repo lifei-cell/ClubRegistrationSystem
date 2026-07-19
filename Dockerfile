@@ -2,17 +2,16 @@ FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 
-# 设置时区 & locale（解决中文乱码）
 RUN apk add --no-cache tzdata musl-locales musl-locales-lang && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
 
-# 复制 jar 包（通过 Maven 打包后生成，finalName=app）
+# 复制 jar 包
 COPY target/app.jar app.jar
 
 EXPOSE 8080
 
-# 设置 locale 为 UTF-8，解决中文乱码
+# 设置 locale 为 UTF-8
 ENV LANG=zh_CN.UTF-8 \
     LC_ALL=zh_CN.UTF-8
 
