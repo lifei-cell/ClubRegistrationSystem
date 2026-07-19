@@ -1,0 +1,23 @@
+# Maven / Java
+# 排除 target 下的非 jar 文件（允许 COPY target/*.jar）
+target/*
+!target/*.jar
+*.war
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.env
+docker-compose.override.yml

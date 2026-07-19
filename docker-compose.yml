@@ -1,0 +1,54 @@
+services:
+  # ==================== MySQL 数据库 ====================
+  mysql:
+    image: mysql:8.4
+    container_name: club-mysql
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      # 挂载初始化 SQL 脚本，容器首次启动时自动执行
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      # 持久化数据库数据
+      - mysql-data:/var/lib/mysql
+    networks:
+      - club-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ==================== Spring Boot 后端 ====================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: club-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/club_registration?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionInitSql=SET NAMES utf8mb4
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    networks:
+      - club-network
+
+networks:
+  club-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
