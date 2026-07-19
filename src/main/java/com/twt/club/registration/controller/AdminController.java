@@ -1,5 +1,6 @@
 package com.twt.club.registration.controller;
 
+import com.twt.club.registration.common.Constants;
 import com.twt.club.registration.common.Result;
 import com.twt.club.registration.dto.ActivityCreateRequest;
 import com.twt.club.registration.dto.ActivityUpdateRequest;
@@ -34,7 +35,7 @@ public class AdminController {
         Long userId = SecurityUtils.getCurrentUserId();
         ActivityDetailVO activity = activityService.create(request, userId);
         operationLogService.log(userId, SecurityUtils.getCurrentUsername(),
-                "CREATE_ACTIVITY", "activity", activity.getId(), "创建活动: " + activity.getTitle());
+                Constants.ACTION_CREATE_ACTIVITY, Constants.TARGET_TYPE_ACTIVITY, activity.getId(), "创建活动: " + activity.getTitle());
         return Result.success("创建成功", activity);
     }
 
@@ -43,7 +44,7 @@ public class AdminController {
                                                    @Valid @RequestBody ActivityUpdateRequest request) {
         ActivityDetailVO activity = activityService.update(id, request);
         operationLogService.log(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentUsername(),
-                "UPDATE_ACTIVITY", "activity", id, "修改活动: " + activity.getTitle());
+                Constants.ACTION_UPDATE_ACTIVITY, Constants.TARGET_TYPE_ACTIVITY, id, "修改活动: " + activity.getTitle());
         return Result.success("修改成功", activity);
     }
 
@@ -51,7 +52,7 @@ public class AdminController {
     public Result<Void> deleteActivity(@PathVariable Long id) {
         activityService.delete(id);
         operationLogService.log(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentUsername(),
-                "DELETE_ACTIVITY", "activity", id, "删除活动 ID: " + id);
+                Constants.ACTION_DELETE_ACTIVITY, Constants.TARGET_TYPE_ACTIVITY, id, "删除活动 ID: " + id);
         return Result.success("删除成功");
     }
 
@@ -67,7 +68,7 @@ public class AdminController {
     public Result<CategoryVO> createCategory(@Valid @RequestBody CategoryRequest request) {
         CategoryVO category = categoryService.create(request);
         operationLogService.log(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentUsername(),
-                "CREATE_CATEGORY", "category", category.getId(), "创建分类: " + category.getName());
+                Constants.ACTION_CREATE_CATEGORY, Constants.TARGET_TYPE_CATEGORY, category.getId(), "创建分类: " + category.getName());
         return Result.success("创建成功", category);
     }
 
@@ -76,7 +77,7 @@ public class AdminController {
                                              @Valid @RequestBody CategoryRequest request) {
         CategoryVO category = categoryService.update(id, request);
         operationLogService.log(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentUsername(),
-                "UPDATE_CATEGORY", "category", id, "修改分类: " + category.getName());
+                Constants.ACTION_UPDATE_CATEGORY, Constants.TARGET_TYPE_CATEGORY, id, "修改分类: " + category.getName());
         return Result.success("修改成功", category);
     }
 
@@ -84,7 +85,7 @@ public class AdminController {
     public Result<Void> deleteCategory(@PathVariable Long id) {
         categoryService.delete(id);
         operationLogService.log(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentUsername(),
-                "DELETE_CATEGORY", "category", id, "删除分类 ID: " + id);
+                Constants.ACTION_DELETE_CATEGORY, Constants.TARGET_TYPE_CATEGORY, id, "删除分类 ID: " + id);
         return Result.success("删除成功");
     }
 }

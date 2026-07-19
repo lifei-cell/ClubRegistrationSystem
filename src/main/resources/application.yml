@@ -1,12 +1,17 @@
 server:
   port: 8080
 
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
 spring:
   jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
   datasource:
-    url: jdbc:mysql://localhost:3306/club_registration?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/club_registration?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&connectionInitSql=SET NAMES utf8mb4
     username: root
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver

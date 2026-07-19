@@ -28,5 +28,5 @@ public class Registration {
     private LocalDateTime updatedAt;
 
     @TableLogic
-    private long isDeleted;
+    private Integer isDeleted;
 }

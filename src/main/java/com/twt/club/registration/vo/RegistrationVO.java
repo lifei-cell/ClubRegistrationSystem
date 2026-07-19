@@ -20,6 +20,4 @@ public class RegistrationVO {
     private String status;
 
     private LocalDateTime registeredAt;
-
-    private LocalDateTime cancelledAt;
 }

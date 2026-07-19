@@ -3,10 +3,10 @@ package com.twt.club.registration.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.twt.club.registration.common.Constants;
 import com.twt.club.registration.common.ErrorCode;
 import com.twt.club.registration.common.PageResult;
 import com.twt.club.registration.entity.Activity;
-import com.twt.club.registration.entity.Category;
 import com.twt.club.registration.entity.Registration;
 import com.twt.club.registration.entity.User;
 import com.twt.club.registration.exception.BusinessException;
@@ -16,8 +16,6 @@ import com.twt.club.registration.mapper.UserMapper;
 import com.twt.club.registration.service.RegistrationService;
 import com.twt.club.registration.vo.RegistrationVO;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +26,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class RegistrationServiceImpl implements RegistrationService {
 
     private final RegistrationMapper registrationMapper;
@@ -53,11 +50,12 @@ public class RegistrationServiceImpl implements RegistrationService {
             throw new BusinessException(ErrorCode.ACTIVITY_STARTED);
         }
 
-        // 检查重复报名
-        Long count = registrationMapper.selectCount(new LambdaQueryWrapper<Registration>()
+        // 查找已有记录（可能是 CANCELLED 状态，也可能是还没记录）
+        Registration existing = registrationMapper.selectOne(new LambdaQueryWrapper<Registration>()
                 .eq(Registration::getUserId, userId)
                 .eq(Registration::getActivityId, activityId));
-        if (count > 0) {
+
+        if (existing != null && Constants.REGISTRATION_STATUS_REGISTERED.equals(existing.getStatus())) {
             throw new BusinessException(ErrorCode.ALREADY_REGISTERED);
         }
 
@@ -67,12 +65,20 @@ public class RegistrationServiceImpl implements RegistrationService {
             throw new BusinessException(ErrorCode.ACTIVITY_FULL);
         }
 
-        Registration registration = new Registration();
-        registration.setUserId(userId);
-        registration.setActivityId(activityId);
-        registration.setStatus("REGISTERED");
-        registration.setRegisteredAt(LocalDateTime.now());
-        registrationMapper.insert(registration);
+        if (existing != null) {
+            // 之前取消过，重新激活原记录
+            existing.setStatus(Constants.REGISTRATION_STATUS_REGISTERED);
+            existing.setRegisteredAt(LocalDateTime.now());
+            existing.setCancelledAt(null);
+            registrationMapper.updateById(existing);
+        } else {
+            Registration registration = new Registration();
+            registration.setUserId(userId);
+            registration.setActivityId(activityId);
+            registration.setStatus(Constants.REGISTRATION_STATUS_REGISTERED);
+            registration.setRegisteredAt(LocalDateTime.now());
+            registrationMapper.insert(registration);
+        }
     }
 
     @Override
@@ -88,13 +94,12 @@ public class RegistrationServiceImpl implements RegistrationService {
             throw new BusinessException(ErrorCode.CANNOT_CANCEL_STARTED);
         }
 
-        // 原子更新
+        // 原子更新：只修改状态和取消时间，不软删除
         LambdaUpdateWrapper<Registration> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(Registration::getUserId, userId)
                 .eq(Registration::getActivityId, activityId)
-                .eq(Registration::getStatus, "REGISTERED")
-                .set(Registration::getStatus, "CANCELLED")
-                .set(Registration::getIsDeleted, 1)
+                .eq(Registration::getStatus, Constants.REGISTRATION_STATUS_REGISTERED)
+                .set(Registration::getStatus, Constants.REGISTRATION_STATUS_CANCELLED)
                 .set(Registration::getCancelledAt, LocalDateTime.now());
         int updated = registrationMapper.update(updateWrapper);
         if (updated == 0) {
@@ -104,7 +109,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         // 将报名人数减 1
         int participantUpdated = activityMapper.updateCurrentParticipants(activityId, -1);
         if (participantUpdated == 0) {
-            log.warn("取消报名时扣减名额失败: activityId={}, userId={}", activityId, userId);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "取消报名时扣减名额失败，请稍后重试");
         }
     }
 
@@ -112,6 +117,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     public PageResult<RegistrationVO> getMyRegistrations(Long userId, Integer page, Integer size) {
         LambdaQueryWrapper<Registration> wrapper = new LambdaQueryWrapper<Registration>()
                 .eq(Registration::getUserId, userId)
+                .eq(Registration::getStatus, Constants.REGISTRATION_STATUS_REGISTERED)
                 .orderByDesc(Registration::getRegisteredAt);
 
         Page<Registration> p = new Page<>(page, size);
@@ -127,7 +133,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         List<Registration> registrations = registrationMapper.selectList(
                 new LambdaQueryWrapper<Registration>()
                         .eq(Registration::getActivityId, activityId)
-                        .eq(Registration::getStatus, "REGISTERED")
+                        .eq(Registration::getStatus, Constants.REGISTRATION_STATUS_REGISTERED)
                         .orderByAsc(Registration::getRegisteredAt));
         return enrichWithActivityInfo(registrations);
     }
@@ -160,7 +166,6 @@ public class RegistrationServiceImpl implements RegistrationService {
             vo.setActivityId(r.getActivityId());
             vo.setStatus(r.getStatus());
             vo.setRegisteredAt(r.getRegisteredAt());
-            vo.setCancelledAt(r.getCancelledAt());
 
             User user = userMap.get(r.getUserId());
             if (user != null) {

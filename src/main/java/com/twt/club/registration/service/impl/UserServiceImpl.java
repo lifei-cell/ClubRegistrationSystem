@@ -45,6 +45,7 @@ public class UserServiceImpl implements UserService {
             if (msg != null && msg.contains("uk_email")) {
                 throw new BusinessException(ErrorCode.EMAIL_EXISTS);
             }
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR);
         }
 
         return toUserVO(user);

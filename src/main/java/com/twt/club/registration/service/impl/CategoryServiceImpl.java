@@ -66,7 +66,11 @@ public class CategoryServiceImpl implements CategoryService {
             category.setSortOrder(request.getSortOrder());
         }
 
-        categoryMapper.updateById(category);
+        try {
+            categoryMapper.updateById(category);
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException(ErrorCode.CATEGORY_NAME_EXISTS);
+        }
 
         return toVO(category);
     }

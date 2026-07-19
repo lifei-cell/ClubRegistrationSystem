@@ -2,6 +2,7 @@ package com.twt.club.registration.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.twt.club.registration.common.Constants;
 import com.twt.club.registration.common.ErrorCode;
 import com.twt.club.registration.common.PageResult;
 import com.twt.club.registration.dto.ActivityCreateRequest;
@@ -126,7 +127,7 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setMaxParticipants(request.getMaxParticipants());
         activity.setCurrentParticipants(0);
         activity.setCategoryId(request.getCategoryId());
-        activity.setStatus("UPCOMING");
+        activity.setStatus(Constants.ACTIVITY_STATUS_UPCOMING);
         activity.setCreatedBy(userId);
 
         try {
@@ -183,7 +184,11 @@ public class ActivityServiceImpl implements ActivityService {
             activity.setCategoryId(request.getCategoryId());
         }
 
-        activityMapper.updateById(activity);
+        try {
+            activityMapper.updateById(activity);
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException(ErrorCode.ACTIVITY_NAME_EXISTS);
+        }
         return getById(activity.getId());
     }
 
@@ -198,10 +203,20 @@ public class ActivityServiceImpl implements ActivityService {
         // 检查是否有有效报名记录
         Long count = registrationMapper.selectCount(new LambdaQueryWrapper<Registration>()
                 .eq(Registration::getActivityId, id)
-                .eq(Registration::getStatus, "REGISTERED"));
+                .eq(Registration::getStatus, Constants.REGISTRATION_STATUS_REGISTERED));
         if (count > 0) {
             throw new BusinessException(ErrorCode.ACTIVITY_HAS_REGISTRATIONS);
         }
+
+        // 将 title 追加后缀以释放唯一约束
+        String suffix = "_deleted_" + id;
+        String newTitle = activity.getTitle() + suffix;
+        // 如果超出数据库限制，则截断原标题
+        if (newTitle.length() > 100) {
+            newTitle = activity.getTitle().substring(0, 100 - suffix.length()) + suffix;
+        }
+        activity.setTitle(newTitle);
+        activityMapper.updateById(activity);
 
         activityMapper.deleteById(id);
     }
