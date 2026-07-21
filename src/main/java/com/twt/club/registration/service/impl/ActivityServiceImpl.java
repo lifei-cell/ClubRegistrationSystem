@@ -61,7 +61,7 @@ public class ActivityServiceImpl implements ActivityService {
         wrapper.orderByDesc(Activity::getStartTime);
 
         Page<Activity> page = new Page<>(pageNum, pageSize);
-        page = activityMapper.selectPage(page, wrapper);
+        activityMapper.selectPage(page, wrapper);
 
         // 获取分类名称映射
         List<Activity> activities = page.getRecords();
@@ -70,15 +70,13 @@ public class ActivityServiceImpl implements ActivityService {
                 .filter(id -> id != null)
                 .distinct()
                 .toList();
-        Map<Long, String> categoryMap = Map.of();
-        if (!categoryIds.isEmpty()) {
-            categoryMap = categoryMapper.selectBatchIds(categoryIds).stream()
-                    .collect(Collectors.toMap(Category::getId, Category::getName));
-        }
+        Map<Long, String> categoryMap = categoryIds.isEmpty()
+                ? Map.of()
+                : categoryMapper.selectBatchIds(categoryIds).stream()
+                        .collect(Collectors.toMap(Category::getId, Category::getName));
 
-        Map<Long, String> finalCategoryMap = categoryMap;
         List<ActivityVO> records = activities.stream()
-                .map(a -> toVO(a, finalCategoryMap.get(a.getCategoryId())))
+                .map(a -> toVO(a, categoryMap.get(a.getCategoryId())))
                 .toList();
 
         return PageResult.of(page.getTotal(), page.getCurrent(), page.getSize(), records);
@@ -209,11 +207,13 @@ public class ActivityServiceImpl implements ActivityService {
         String suffix = "_deleted_" + id;
         String newTitle = activity.getTitle() + suffix;
         // 如果超出数据库限制，则截断原标题
-        if (newTitle.length() > 100) {
-            newTitle = activity.getTitle().substring(0, 100 - suffix.length()) + suffix;
+        if (newTitle.length() > Constants.ACTIVITY_TITLE_MAX_LENGTH) {
+            newTitle = activity.getTitle().substring(0, Constants.ACTIVITY_TITLE_MAX_LENGTH - suffix.length()) + suffix;
         }
         activity.setTitle(newTitle);
-        activityMapper.updateById(activity);
+        if (activityMapper.updateById(activity) == 0) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "删除活动失败");
+        }
 
         activityMapper.deleteById(id);
     }

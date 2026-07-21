@@ -32,4 +32,7 @@ public final class Constants {
     // 目标类型常量
     public static final String TARGET_TYPE_ACTIVITY = "activity";
     public static final String TARGET_TYPE_CATEGORY = "category";
+
+    // 数据库限制常量
+    public static final int ACTIVITY_TITLE_MAX_LENGTH = 100;
 }

@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-社团活动报名管理系统是一个基于 Spring Boot 的后端 REST API 服务，用于管理大学社团活动的发布、展示、报名与取消报名等业务流程。系统支持普通用户浏览活动并报名，以及管理员创建和管理活动、分类等操作。
+社团活动报名管理系统是一个基于 Spring Boot 的后端 REST API 服务，系统面向校园社团或工作室，支持普通用户查看活动、报名活动、取消报名，管理员可以发布活动、管理活动、管理分类 查看报名情况。
 
 ## 技术栈
 
@@ -318,24 +318,25 @@ mvn spring-boot:run
 
 ### 管理员是否可以报名活动
 
-**可以。** 管理员也可以作为普通用户报名活动。
+**可以。** 管理员本身也是用户，也可以作为普通用户报名活动。
 
 ### 活动开始后是否可以取消报名
 
-**不可以。** 取消报名时会检查 `LocalDateTime.now().isAfter(activity.getStartTime())`，活动开始后取消将抛出 `CANNOT_CANCEL_STARTED` 异常。
+**不可以。** 取消报名时会检查 `LocalDateTime.now().isAfter(activity.getStartTime())`，活动开始后取消将抛出 `CANNOT_CANCEL_STARTED` 异常，活动开始后取消报名，会导致为该活动准备的资源浪费。
 
 ### 删除已有报名的活动时如何处理
 
-**不允许删除。** 删除活动前会检查是否存在状态为 REGISTERED 的报名记录，如果存在则抛出 `ACTIVITY_HAS_REGISTRATIONS` 异常，防止误删有参与者的活动。
+**不允许删除。** 删除活动前会检查是否存在状态为 REGISTERED 的报名记录，如果存在则抛出 `ACTIVITY_HAS_REGISTRATIONS` 异常，这样可以避免误删有参与者的活动，提高参与者的积极性。
 
 ### 分类下存在活动时是否允许删除分类
 
-**不允许删除。** 删除分类前会检查该分类下是否存在活动，如果存在则抛出 `CATEGORY_HAS_ACTIVITIES` 异常。
+**不允许删除。** 删除分类前会检查该分类下是否存在活动，如果存在则抛出 `CATEGORY_HAS_ACTIVITIES` 异常，如果删除分类会导致该分类下的活动分类字段为空，不符合业务要求。
 
 
 ## Git 提交说明
 
 ```
+add apifox docs and readme
 fix some bugs and add exception handler
 fix some issue and add docker-compose dockerfile
 fix some issue about business boundary logic
@@ -358,6 +359,7 @@ Initial commit
 1. **Bug 修复**：在 AI 的帮助下，修复了如取消报名后无法重复报名等bug
 2. **检查代码**：AI 检查我的代码，给我提出了一些修改意见
 3. **数据库初始化数据**：AI 帮我生成了数据库的一些初始化分类和活动数据
+4. **docker**：借助 AI 学习了 docker 的使用
 
 ## 遇到的问题与解决方案
 
